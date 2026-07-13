@@ -15,7 +15,7 @@ on:
         description: 'KernelSU分支(ReSukiSU/SukiSU Ultra/KernelSU Next/KSU(原版)/无内置KSU,默认ReSukiSU)'
         required: true
         type: choice
-        default: 'resukisu'
+        default: 'sukisu'
         options:
           - 'resukisu'
           - 'sukisu'
@@ -263,6 +263,12 @@ jobs:
             KSU_VERSION=40796
             echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
             echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
+            echo "正在修补 SukiSU Ultra v4.1.3 的 6.12 GKI include 路径和版本号..."
+            sed -i 's|^KSU_VERSION[[:space:]]*:=.*|KSU_VERSION     := 40796|' kernel/Kbuild
+            if ! grep -q '../KernelSU/kernel/include' kernel/Kbuild; then
+              printf '%s\n' 'ccflags-y += -I$(srctree)/drivers/kernelsu -I$(srctree)/drivers/kernelsu/include' >> kernel/Kbuild
+              printf '%s\n' 'ccflags-y += -I$(srctree)/../KernelSU/kernel -I$(srctree)/../KernelSU/kernel/include' >> kernel/Kbuild
+            fi
           elif [[ ${{ github.event.inputs.ksu_type }} == "ksunext" ]]; then
             echo "正在配置KernelSU Next..."
             curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/refs/heads/dev-susfs/kernel/setup.sh" | bash -s dev-susfs
